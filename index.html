@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>拖动蓝球</title>
+  <style>
+    html, body {
+      margin: 0;
+      height: 100%;
+      overflow: hidden;
+      background: #f0f4f8;
+      font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+
+    #ball {
+      position: absolute;
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, #6cb8ff, #1e6fd9);
+      box-shadow: 0 8px 20px rgba(30, 111, 217, 0.4);
+      cursor: grab;
+      touch-action: none; /* 让触屏也能拖，不触发页面滚动 */
+      user-select: none;
+      transition: box-shadow 0.2s;
+    }
+
+    #ball:active {
+      cursor: grabbing;
+      box-shadow: 0 12px 28px rgba(30, 111, 217, 0.6);
+    }
+
+    #hint {
+      position: absolute;
+      bottom: 20px;
+      width: 100%;
+      text-align: center;
+      color: #888;
+      font-size: 14px;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="ball"></div>
+  <div id="hint">按住蓝球拖动它</div>
+
+  <script>
+    const ball = document.getElementById('ball');
+
+    // 球的初始位置（放在屏幕中间）
+    let x = window.innerWidth / 2 - 40;
+    let y = window.innerHeight / 2 - 40;
+
+    // 拖动状态
+    let dragging = false;
+    let offsetX = 0;
+    let offsetY = 0;
+
+    function render() {
+      ball.style.left = x + 'px';
+      ball.style.top = y + 'px';
+    }
+    render();
+
+    // 用 pointer 事件，鼠标和触屏都能用
+    ball.addEventListener('pointerdown', (e) => {
+      dragging = true;
+      ball.setPointerCapture(e.pointerId);
+
+      // 记录鼠标相对球左上角的偏移，拖动时不会“跳”
+      const rect = ball.getBoundingClientRect();
+      offsetX = e.clientX - rect.left;
+      offsetY = e.clientY - rect.top;
+    });
+
+    ball.addEventListener('pointermove', (e) => {
+      if (!dragging) return;
+
+      x = e.clientX - offsetX;
+      y = e.clientY - offsetY;
+
+      // 限制在窗口内，不让球跑出去
+      const maxX = window.innerWidth - ball.offsetWidth;
+      const maxY = window.innerHeight - ball.offsetHeight;
+      x = Math.max(0, Math.min(x, maxX));
+      y = Math.max(0, Math.min(y, maxY));
+
+      render();
+    });
+
+    ball.addEventListener('pointerup', () => {
+      dragging = false;
+    });
+
+    ball.addEventListener('pointercancel', () => {
+      dragging = false;
+    });
+
+    // 窗口大小变化时，别让球卡在屏幕外
+    window.addEventListener('resize', () => {
+      const maxX = window.innerWidth - ball.offsetWidth;
+      const maxY = window.innerHeight - ball.offsetHeight;
+      x = Math.max(0, Math.min(x, maxX));
+      y = Math.max(0, Math.min(y, maxY));
+      render();
+    });
+  </script>
+</body>
+</html>
